@@ -654,9 +654,14 @@ namespace ICSharpCode.SharpZipLib.Zip
 			if ( doExtraction && !Directory.Exists(dirName) ) {
 				if ( !entry.IsDirectory || CreateEmptyDirectories ) {
 					try {
-						Directory.CreateDirectory(dirName);
-					}
-					catch (Exception ex) {
+						if (continueRunning_ = events_.OnProcessDirectory(dirName, true)) {
+							// check again; the event handler might have created it
+							if (!Directory.Exists(dirName))
+								Directory.CreateDirectory(dirName);
+						} else {
+							doExtraction = false;
+						}
+					} catch (Exception ex) {
 						doExtraction = false;
 						if ( events_ != null ) {
 							if ( entry.IsDirectory ) {
